@@ -44,8 +44,18 @@ docker run --rm \
 | `S3_ENDPOINT` | S3-compatible endpoint URL |
 | `S3_ACCESS_KEY_ID` | S3 access key |
 | `S3_SECRET_ACCESS_KEY` | S3 secret key |
+| `HEARTBEAT_URL` | _(optional)_ URL pinged on success; `/fail` is appended on failure |
 
-All variables are required. The container exits immediately if any are missing.
+All variables except `HEARTBEAT_URL` are required. The container exits immediately if any required variable is missing.
+
+### Heartbeat monitoring
+
+When `HEARTBEAT_URL` is set, the container sends a `GET` request to monitor each run:
+
+- **Success:** a `GET` to `HEARTBEAT_URL` after the backup is uploaded.
+- **Failure:** a `GET` to `HEARTBEAT_URL` with `/fail` appended if the backup fails for any reason.
+
+This works with services like [Healthchecks.io](https://healthchecks.io/), Uptime Kuma, or any endpoint that accepts a ping. If `HEARTBEAT_URL` is unset, no heartbeat is sent.
 
 ### Scheduled backups with Kubernetes
 

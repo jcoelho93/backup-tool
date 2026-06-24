@@ -8,6 +8,22 @@ set -eo pipefail
 : "${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}"
 : "${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}"
 
+heartbeat() {
+  [ -n "${HEARTBEAT_URL:-}" ] || return 0
+  curl -fsS -m 10 --retry 3 -o /dev/null "$1" \
+    || echo "Warning: failed to send heartbeat to $1" >&2
+}
+
+on_exit() {
+  status=$?
+  if [ "${status}" -eq 0 ]; then
+    heartbeat "${HEARTBEAT_URL}"
+  else
+    heartbeat "${HEARTBEAT_URL%/}/fail"
+  fi
+}
+trap on_exit EXIT
+
 TIMESTAMP=$(date -u +%Y-%m-%d_%H%M%S)
 YEAR=$(date -u +%Y)
 MONTH=$(date -u +%m)
